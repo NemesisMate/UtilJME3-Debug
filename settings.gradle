@@ -1,0 +1,6 @@
+apply from: '../subSettings.gradle'
+
+include_module("UtilJME3-Base")
+include_module("UtilJME3-Lemur")
+
+rootProject.name = 'UtilJME3-Debug'
