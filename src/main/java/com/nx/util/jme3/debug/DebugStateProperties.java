@@ -24,7 +24,7 @@ public class DebugStateProperties extends AbstractAppState {
     private Node rootNode;
     private Spatial debugSpatial;
 
-    private boolean useBatching = true;
+    private boolean useBatching = false;
 
     public DebugStateProperties() {
     }
