@@ -6,6 +6,7 @@ import com.jme3.scene.Spatial;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.Panel;
 import com.simsilica.lemur.style.StyleLoader;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,6 +23,8 @@ public class DebugLemurReloadState extends AbstractDebugGraphStateModule {
 
     private final String stylesPath;
     private final File file;
+
+    private float badTime;
 
     public DebugLemurReloadState(String stylesPath) {
         this.stylesPath = stylesPath;
@@ -45,7 +48,23 @@ public class DebugLemurReloadState extends AbstractDebugGraphStateModule {
             styleLoader.loadStyle(stylesPath, new FileReader(file));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+
+            LoggerFactory.getLogger(this.getClass()).error("File not found: {}.", file);
+            return;
+        } catch (Exception e) {
+            if(badTime > 5 || badTime == 0) {
+                badTime = 0;
+                LoggerFactory.getLogger(this.getClass()).warn("Bad style file: {}.", file);
+            }
+
+            badTime += tpf;
+
+            return;
         }
+
+        badTime = 0;
+
+
 
 //        styleLoader.loadStyle(stylesReader.toString(), stylesReader);
 
