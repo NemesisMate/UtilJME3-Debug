@@ -139,6 +139,12 @@ public class DebugCommand implements Command<ConsoleCommand> {
                     result = debugNormals(arrows, tangents);
                     type = "normals";
                     break;
+                case "lemur":
+                case "panel":
+                case "panels":
+                    result = debugLemur();
+                    type = "Lemur Panels";
+                    break;
 
             }
         }
@@ -146,6 +152,10 @@ public class DebugCommand implements Command<ConsoleCommand> {
         DebugStateProperties.checkDebugState(app, selected, false);
 
         LoggerFactory.getLogger(this.getClass()).info(MarkerFactory.getMarker("CONSOLE"), "Debug {} enabled: {}", type, (result ? "true" : "false"));
+    }
+
+    private boolean debugLemur() {
+        return false;
     }
 
     private boolean debugNormals(boolean arrows, boolean tangents) {

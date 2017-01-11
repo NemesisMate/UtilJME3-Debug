@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * TODO: This is currently bad threaded. Do it well, and make it in a way it is closed if the app is closed O.o.
+ * TODO: Better just move to a DebugState as every other debug things.
  * Created by NemesisMate.
  */
 public class AssetCommand implements Command<ConsoleCommand> {
