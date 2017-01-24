@@ -45,7 +45,19 @@ public class DebugLemurReloadState extends AbstractDebugGraphStateModule {
     @Override
     protected void updateSceneGraph(float tpf) {
         try {
+//            GuiGlobals.getInstance().getStyles().clearCache();
             styleLoader.loadStyle(stylesPath, new FileReader(file));
+//            new FileReader(file);
+
+
+
+            badTime = 0;
+
+
+
+//        styleLoader.loadStyle(stylesReader.toString(), stylesReader);
+
+            super.updateSceneGraph(tpf);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
 
@@ -62,18 +74,13 @@ public class DebugLemurReloadState extends AbstractDebugGraphStateModule {
             return;
         }
 
-        badTime = 0;
 
-
-
-//        styleLoader.loadStyle(stylesReader.toString(), stylesReader);
-
-        super.updateSceneGraph(tpf);
     }
 
     @Override
     protected boolean update(Spatial spatial, float tpf) {
         if(spatial instanceof Panel) {
+
             GuiGlobals.getInstance().getStyles().applyStyles(spatial, ((Panel) spatial).getElementId(), ((Panel) spatial).getStyle());
         }
 
