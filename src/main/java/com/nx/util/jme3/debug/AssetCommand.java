@@ -63,41 +63,29 @@ public class AssetCommand implements Command<ConsoleCommand> {
             switch(args[0].toLowerCase()) {
                 case "r":
                 case "reload":
-                    ReloadType type = null;
+                    ReloadType type = ReloadType.ALL;
+                    boolean auto = false;
+
                     if(args.length > 1) {
-                        switch (args[1].toLowerCase()) {
-                            case "s":
-                            case "stencil":
-                            case "stencils":
-                                type = ReloadType.STENCIL;
-                                break;
-                            case "a":
-                            case "all":
-                                type = ReloadType.ALL;
-                                break;
-                        }
-
-
-                        boolean auto = false;
-                        if(args.length > 2) {
-                            switch (args[2].toLowerCase()) {
+                        for(String arg : args) {
+                            switch (arg.toLowerCase()) {
+                                case "s":
+                                case "stencil":
+                                case "stencils":
+                                    type = ReloadType.STENCIL;
+                                    break;
+                                case "all":
+                                    type = ReloadType.ALL;
+                                    break;
                                 case "auto":
                                 case "automatic":
                                     auto = true;
                                     break;
                             }
                         }
-
-
-                        if(type != null) {
-                            reload(type, auto);
-                            return;
-                        }
-
-                        return;
                     }
 
-                    reload(ReloadType.ALL, false);
+                    reload(type, auto);
 
                     break;
             }
