@@ -69,7 +69,7 @@ public class DebugSkeletonState extends AbstractThreadedDebugStateModule {
         super.initialize(stateManager, app);
 
 //        cachedMap = new HashMap<>();
-        cachedControls = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        cachedControls = Collections.newSetFromMap(new ConcurrentHashMap<SkeletonControl, Boolean>());
     }
 
     @Override
@@ -109,7 +109,7 @@ public class DebugSkeletonState extends AbstractThreadedDebugStateModule {
 
 //            cachedMap.put(task, skeletonControls);
 
-            for(SkeletonControl skeletonControl : skeletonControls) {
+            for(final SkeletonControl skeletonControl : skeletonControls) {
                 if(cachedControls.contains(skeletonControl)) {
                     continue;
                 }
@@ -118,7 +118,7 @@ public class DebugSkeletonState extends AbstractThreadedDebugStateModule {
 
 
 
-                SkeletonDebugger skeletonDebugger = new SkeletonDebugger(SKELETON_NAME, skeleton);
+                final SkeletonDebugger skeletonDebugger = new SkeletonDebugger(SKELETON_NAME, skeleton);
 
                 skeletonDebugger.depthFirstTraversal(new SceneGraphVisitor() {
                     @Override

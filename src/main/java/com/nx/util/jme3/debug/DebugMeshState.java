@@ -107,7 +107,7 @@ public class DebugMeshState extends AbstractThreadedDebugStateModule {
             return false;
         }
 
-        Geometry geometry = (Geometry) spatial;
+        final Geometry geometry = (Geometry) spatial;
 
         Material material = geometry.getMaterial();
 
@@ -126,7 +126,7 @@ public class DebugMeshState extends AbstractThreadedDebugStateModule {
 
         originalMats.put(geometry, material);
 
-        Material newMaterial = getDebugMaterial(geometry, colors, wire, normals, faceCullOff);
+        final Material newMaterial = getDebugMaterial(geometry, colors, wire, normals, faceCullOff);
 //        if(isUsingGeneratedMats()) {
 ////            if(originalMats.containsKey(geom)) {
 ////                return true;

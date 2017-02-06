@@ -133,11 +133,11 @@ public class AssetCommand implements Command<ConsoleCommand> {
                 MDC.clear();
 //                AssetManager assetManager = app.getAssetManager();
 
-                Set<MaterialKey> reloadedMats = new HashSet<>();
+                final Set<MaterialKey> reloadedMats = new HashSet<>();
 
                 selected.depthFirstTraversal(new SceneGraphVisitor() {
                     @Override
-                    public void visit(Spatial spatial) {
+                    public void visit(final Spatial spatial) {
                         if(reloadConditions != null) {
                             for(ReloadCondition reloadCondition : reloadConditions) {
                                 if(!reloadCondition.meetCondition(spatial)) {

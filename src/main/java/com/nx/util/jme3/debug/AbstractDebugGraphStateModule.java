@@ -32,7 +32,7 @@ public abstract class AbstractDebugGraphStateModule extends AbstractDebugStateMo
     private Callable<Void> callable = new Callable<Void>() {
         @Override
         public Void call() throws Exception {
-            for(Spatial object : debugsCache.keySet()) {
+            for(final Spatial object : debugsCache.keySet()) {
                 //TODO: make an AbstractDebugGraphStateModule. Currently this is incompatible with navmesh check (for that can add a boolean saying if check or not)
 //                if(object instanceof Spatial) {
                     Node parent = object.getParent();
@@ -89,7 +89,7 @@ public abstract class AbstractDebugGraphStateModule extends AbstractDebugStateMo
         updateSceneGraph(tpf);
     }
 
-    protected void updateSceneGraph(float tpf) {
+    protected void updateSceneGraph(final float tpf) {
         final Node rootNode = getRootNode();
 
         SpatialUtil.visitNodeWith(debugSpatial, new SpatialUtil.Operation() {

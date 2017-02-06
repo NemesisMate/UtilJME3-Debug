@@ -32,7 +32,7 @@ public abstract class AbstractThreadedDebugStateModule extends AbstractDebugGrap
     }
 
     @Override
-    protected void addToDebug(Spatial original, Spatial debug) {
+    protected void addToDebug(final Spatial original, final Spatial debug) {
         app.enqueue(new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -43,7 +43,7 @@ public abstract class AbstractThreadedDebugStateModule extends AbstractDebugGrap
     }
 
     @Override
-    protected void removeFromDebug(Spatial original) {
+    protected void removeFromDebug(final Spatial original) {
         app.enqueue(new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -54,7 +54,7 @@ public abstract class AbstractThreadedDebugStateModule extends AbstractDebugGrap
     }
 
     @Override
-    protected void addControl(Spatial spatial, Control control) {
+    protected void addControl(final Spatial spatial, final Control control) {
         app.enqueue(new Callable<Void>() {
             @Override
             public Void call() throws Exception {

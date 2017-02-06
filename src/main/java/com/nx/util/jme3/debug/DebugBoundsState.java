@@ -167,7 +167,7 @@ public class DebugBoundsState extends AbstractDebugGraphStateModule {
     }
 
 
-    private void addboundDebug(Spatial originalSpatial, Geometry debugGeometry, boolean locationMark) {
+    private void addboundDebug(final Spatial originalSpatial, final Geometry debugGeometry, boolean locationMark) {
 //        final Spatial key = originalSpatial;
 
 
