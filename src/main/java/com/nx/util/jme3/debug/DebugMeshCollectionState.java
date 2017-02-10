@@ -44,7 +44,7 @@ public class DebugMeshCollectionState extends AbstractDebugStateModule {
         super.initialize(stateManager, app);
 
         this.aux = new HashMap<>();
-        this.size = this.collection.size();
+//        this.size = this.collection.size();
 
         if(neverCull) {
             getDebugsNode().setCullHint(Spatial.CullHint.Never);

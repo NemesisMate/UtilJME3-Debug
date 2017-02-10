@@ -218,9 +218,10 @@ public class DebugMeshState extends AbstractThreadedDebugStateModule {
 //        RenderState renderState = geometry.getMaterial().getAdditionalRenderState();
 
         Material debugMaterial;
+        Material originalMaterial = geometry.getMaterial();
         if(normals) {
             debugMaterial = DebugUtil.createNormalMaterial(geometry);
-        }  else if(colors || !wire) {
+        }  else if(colors || !wire || originalMaterial == null) {
             debugMaterial = DebugUtil.createDebugMaterial(geometry, colors);
             LoggerFactory.getLogger(DebugMeshState.class).debug("ALSKD");
         } else {
@@ -233,7 +234,7 @@ public class DebugMeshState extends AbstractThreadedDebugStateModule {
 
         if(wire) {
             LoggerFactory.getLogger(DebugMeshState.class).debug("noup");
-            debugRenderState.setWireframe(!geometry.getMaterial().getAdditionalRenderState().isWireframe());
+            debugRenderState.setWireframe(originalMaterial == null || !originalMaterial.getAdditionalRenderState().isWireframe());
         }
 
         if(faceCullOff) {

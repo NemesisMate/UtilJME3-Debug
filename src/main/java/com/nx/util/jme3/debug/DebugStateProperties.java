@@ -57,6 +57,11 @@ public class DebugStateProperties extends AbstractAppState {
         return pool;
     }
 
+    @Override
+    public void cleanup() {
+        pool.shutdown();
+    }
+
     public void setPool(ThreadPoolExecutor pool) {
         this.pool = pool;
     }
