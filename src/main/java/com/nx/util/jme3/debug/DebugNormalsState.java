@@ -13,7 +13,7 @@ import com.nx.util.jme3.base.SpatialUtil;
 /**
  * Created by NemesisMate on 1/12/16.
  */
-public class DebugNormalsState extends AbstractThreadedDebugStateModule {
+public class DebugNormalsState extends AbstractThreadedDebugGraphStateModule {
 
     boolean useArrows;
     VertexBuffer.Type type;

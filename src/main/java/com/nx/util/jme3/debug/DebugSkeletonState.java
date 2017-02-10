@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by NemesisMate on 1/12/16.
  */
-public class DebugSkeletonState extends AbstractThreadedDebugStateModule {
+public class DebugSkeletonState extends AbstractThreadedDebugGraphStateModule {
 
     //TODO: Show different if the skeleton control is enabled or disabled.
 

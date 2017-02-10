@@ -16,7 +16,7 @@ import java.util.concurrent.Future;
 /**
  * Created by NemesisMate on 1/12/16.
  */
-public class DebugMeshCollectionState extends AbstractDebugStateModule {
+public class DebugMeshCollectionState extends AbstractThreadedDebugStateModule {
     private boolean colors;
     private boolean wire;
     private boolean normals;

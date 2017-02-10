@@ -21,7 +21,7 @@ import java.util.concurrent.Callable;
  * //TODO: Solution to this: create a dupped scene and attach it to the debugNode (and set the cullhint for the uppernodes to always)
  * Created by NemesisMate on 1/12/16.
  */
-public class DebugMeshState extends AbstractThreadedDebugStateModule {
+public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 
     private boolean colors;
     private boolean wire;
