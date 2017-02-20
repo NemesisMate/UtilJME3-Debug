@@ -86,7 +86,7 @@ public abstract class AbstractDebugStateModule<T> extends AbstractAppState {
     public void cleanup() {
         super.cleanup();
 
-        pool.shutdown();
+//        pool.shutdown();
         this.debugsNode.removeFromParent();
     }
 

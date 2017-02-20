@@ -130,7 +130,9 @@ public class AssetCommand implements Command<ConsoleCommand> {
         runnable = new Runnable() {
             @Override
             public void run() {
+                //FIXME: This should be supressing all logback logs output but it isn't currently working O.o (it worked once... .I think)
                 MDC.clear();
+//                MDC.setContextMap(null);
 //                AssetManager assetManager = app.getAssetManager();
 
                 final Set<MaterialKey> reloadedMats = new HashSet<>();
@@ -216,6 +218,7 @@ public class AssetCommand implements Command<ConsoleCommand> {
                 ((Logger)LoggerFactory.getLogger(this.getClass())).setLevel(Level.DEBUG);
             } else {
                 service = Executors.newSingleThreadScheduledExecutor();
+                //TODO: find a better way, this "fixed rate" tries to catch-up if it period takes longer than expected (laggy situation)
                 service.scheduleAtFixedRate(runnable, 0, 1, TimeUnit.SECONDS);
                 ((Logger)LoggerFactory.getLogger(this.getClass())).setLevel(Level.ERROR);
 //                reloadThread = new Thread(runnable);
