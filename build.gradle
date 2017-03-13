@@ -3,4 +3,6 @@ apply from: "../subBuild.gradle"
 dependencies {
     compile(get_module("UtilJME3-Base"))
     compile(get_module("UtilJME3-Lemur"))
+
+    compile "$jme_physics"
 }

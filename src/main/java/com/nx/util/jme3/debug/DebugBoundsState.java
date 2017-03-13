@@ -43,6 +43,9 @@ public class DebugBoundsState extends AbstractDebugGraphStateModule {
     private Material noVolumeNodeMaterial;
     private Material noVolumeGeomMaterial;
 
+    private Material flatVolumeGeomMaterial;
+    private Material flatVolumeNodeMaterial;
+
     private Material geomCenterMaterial;
 
 
@@ -67,20 +70,24 @@ public class DebugBoundsState extends AbstractDebugGraphStateModule {
 
         this.geometriesMaterial = SpatialUtil.createMaterial(getAssetManager(), ColorRGBA.Green);
         this.noVolumeGeomMaterial = SpatialUtil.createMaterial(getAssetManager(), ColorRGBA.Blue);
+        this.flatVolumeGeomMaterial = SpatialUtil.createMaterial(getAssetManager(), ColorRGBA.Cyan);
 
         this.nodesMaterial = SpatialUtil.createMaterial(getAssetManager(), ColorRGBA.Yellow);
         this.noVolumeNodeMaterial = SpatialUtil.createMaterial(getAssetManager(), ColorRGBA.Orange);
+        this.flatVolumeNodeMaterial = SpatialUtil.createMaterial(getAssetManager(), ColorRGBA.Magenta);
 
         this.emptyNodesMaterial = SpatialUtil.createMaterial(getAssetManager(), ColorRGBA.Red);
 
-        this.geomCenterMaterial = SpatialUtil.createMaterial(getAssetManager(), ColorRGBA.Magenta);
+        this.geomCenterMaterial = SpatialUtil.createMaterial(getAssetManager(), ColorRGBA.White);
 
 
         this.geometriesMaterial.getAdditionalRenderState().setWireframe(true);
         this.noVolumeGeomMaterial.getAdditionalRenderState().setWireframe(true);
+        this.flatVolumeGeomMaterial.getAdditionalRenderState().setWireframe(true);
         this.nodesMaterial.getAdditionalRenderState().setWireframe(true);
         this.noVolumeNodeMaterial.getAdditionalRenderState().setWireframe(true);
         this.emptyNodesMaterial.getAdditionalRenderState().setWireframe(true);
+        this.flatVolumeNodeMaterial.getAdditionalRenderState().setWireframe(true);
 
     }
 
@@ -134,7 +141,7 @@ public class DebugBoundsState extends AbstractDebugGraphStateModule {
                 if (bv instanceof BoundingBox) {
                     BoundingBox bb = (BoundingBox) bv;
 
-                    if(bv.getVolume() == 0) {
+                    if(hasVolume(bv)) {
                         debugGeometry = SpatialUtil.createBox(bb.getXExtent(), bb.getYExtent(), bb.getZExtent());
                     } else {
                         debugGeometry = SpatialUtil.createBox(NO_VOLUME_SIZE);
@@ -142,7 +149,7 @@ public class DebugBoundsState extends AbstractDebugGraphStateModule {
                     //                                        debuggedBounds.put(task, debugGeometry);
                 } else if (bv instanceof BoundingSphere) {
                     BoundingSphere bs = (BoundingSphere) bv;
-                    if(bv.getVolume() == 0) {
+                    if(hasVolume(bv)) {
                         debugGeometry = SpatialUtil.createSphere(bs.getRadius());
                     } else {
                         debugGeometry = SpatialUtil.createSphere(NO_VOLUME_SIZE);
@@ -237,13 +244,23 @@ public class DebugBoundsState extends AbstractDebugGraphStateModule {
                         //                Vector3f localScale = value.getLocalScale();
 
                         Vector3f newLocation;
-                        if (bv != null && bv.getVolume() != 0) {
+                        if (bv != null && hasVolume(bv)) {
                             newLocation = bv.getCenter().subtract(originalSpatial.getWorldTranslation(), aux).addLocal(originalSpatial.getWorldTranslation());
 
                             if(originalSpatial instanceof Node) {
-                                changeDebugMaterial(debugGeometry, nodesMaterial);
+                                // If it is flat
+                                if(bv.getVolume() == 0) {
+                                    changeDebugMaterial(debugGeometry, flatVolumeNodeMaterial);
+                                } else {
+                                    changeDebugMaterial(debugGeometry, nodesMaterial);
+                                }
                             } else {
-                                changeDebugMaterial(debugGeometry, geometriesMaterial);
+                                // If it is flat
+                                if(bv.getVolume() == 0) {
+                                    changeDebugMaterial(debugGeometry, flatVolumeGeomMaterial);
+                                } else {
+                                    changeDebugMaterial(debugGeometry, geometriesMaterial);
+                                }
                             }
 
 
@@ -312,5 +329,22 @@ public class DebugBoundsState extends AbstractDebugGraphStateModule {
 
     }
 
+    public static boolean hasVolume(BoundingVolume bv) {
+        if(bv.getVolume() != 0) {
+            return true;
+        }
+
+        if(bv instanceof BoundingBox) {
+            return ((BoundingBox) bv).getXExtent() != 0 || ((BoundingBox) bv).getYExtent() != 0 || ((BoundingBox) bv).getZExtent() != 0;
+        } else if(!(bv instanceof BoundingSphere)) {
+            new UnsupportedOperationException("Bounding volume type not supported: " + bv.getClass()).printStackTrace();
+        }
+
+        return false;
+    }
+
+    public static boolean isFlat(BoundingVolume bv) {
+        return bv.getVolume() == 0 && hasVolume(bv);
+    }
 
 }
