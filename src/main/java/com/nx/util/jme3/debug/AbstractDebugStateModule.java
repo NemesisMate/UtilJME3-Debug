@@ -172,7 +172,7 @@ public abstract class AbstractDebugStateModule<T> extends AbstractAppState {
                 debugsNode.attachChild(debug);
 
 
-        LoggerFactory.getLogger(this.getClass()).debug("BATCHING: {} - {}", original, debug);
+        LoggerFactory.getLogger(AbstractDebugStateModule.class).debug("Marked to batch needed: {} - {}", original, debug);
                 batchNeeded++;
 //                checkBatch();
 
@@ -196,7 +196,7 @@ public abstract class AbstractDebugStateModule<T> extends AbstractAppState {
         if(batchNeeded > 0) {
             if (debugsNode instanceof BatchNode) {
                 ((BatchNode) debugsNode).batch();
-                LoggerFactory.getLogger(this.getClass()).debug("BATCHING: {}", batchNeeded);
+                LoggerFactory.getLogger(AbstractDebugStateModule.class).debug("BATCHING: {}", batchNeeded);
 
                 forceBatch = false;
                 batchNeeded = 0;

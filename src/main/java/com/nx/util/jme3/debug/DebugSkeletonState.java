@@ -141,7 +141,7 @@ public class DebugSkeletonState extends AbstractThreadedDebugGraphStateModule {
                 skeletonDebugger.addControl(new AbstractControl() {
                     @Override
                     protected void controlUpdate(float tpf) {
-                        if(!SpatialUtil.hasControl(spatial, skeletonControl)) {
+                        if(!SpatialUtil.hasControl(originalSpatial, skeletonControl)) {
                             cachedControls.remove(skeletonControl);
                             removeFromDebug(originalSpatial, skeletonDebugger);
                             return;
