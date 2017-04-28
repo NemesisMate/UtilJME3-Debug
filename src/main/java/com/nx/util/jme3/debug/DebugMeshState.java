@@ -4,15 +4,13 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
-import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.*;
 import com.jme3.util.TangentBinormalGenerator;
 import com.nx.util.jme3.base.DebugUtil;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -29,6 +27,8 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
     private boolean normals;
 //    private boolean neverCull;
 
+    private boolean meshInstances;
+
 //    Node selected;
 //    AssetManager assetManager;
 
@@ -37,13 +37,26 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
     private Map<Geometry, Material> originalMats;
     private Map<Geometry, Material> clonedMats;
     private Map<Material, RenderState> originalRenderStates;
-
+    private Map<Mesh, Material> meshesInstances;
 
     public DebugMeshState(boolean colors, boolean wire, boolean normals, boolean faceCullOff) {
+        this(colors, wire, normals, faceCullOff, false);
+//        this.neverCull = neverCull;
+
+        // This mode DOESN'T respect the original shaders and thus, the vertex movement done by these.
+//        if(isUsingGeneratedMats()) {
+
+//        } else {
+//            originalRenderStates = new HashMap<>();
+//        }
+    }
+
+    public DebugMeshState(boolean colors, boolean wire, boolean normals, boolean faceCullOff, boolean meshInstances) {
         this.colors = colors;
         this.wire = wire;
         this.normals = normals;
         this.faceCullOff = faceCullOff;
+        this.meshInstances = meshInstances;
 //        this.neverCull = neverCull;
 
         // This mode DOESN'T respect the original shaders and thus, the vertex movement done by these.
@@ -60,6 +73,10 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 
         originalMats = new HashMap<>();
         clonedMats = new HashMap<>();
+
+        if(meshInstances) {
+            meshesInstances = new IdentityHashMap<>();
+        }
     }
 
     //    @Override
@@ -94,6 +111,7 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 
         originalMats = null;
         clonedMats = null;
+        meshesInstances = null;
     }
 
     @Override
@@ -115,7 +133,7 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
         if(clonedMat != null) {
             if(!clonedMat.contentEquals(material)) {
                 //TODO: solve this case
-                String errorMessage = "Something weird could be happened. Not change any material while mesh debug is enabled.";
+                String errorMessage = "Something weird could be happened. DO NOT change any material while mesh debug is enabled.";
                 LoggerFactory.getLogger(this.getClass()).error(errorMessage);
                 throw new UnsupportedOperationException(errorMessage);
             }
@@ -126,7 +144,21 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 
         originalMats.put(geometry, material);
 
-        final Material newMaterial = getDebugMaterial(geometry, colors, wire, normals, faceCullOff);
+
+
+
+        Material m = null;
+        if(meshInstances) {
+            m = meshesInstances.get(geometry.getMesh());
+        }
+
+        if(m == null) {
+            m = getDebugMaterial(geometry, colors, wire, normals, faceCullOff);
+        }
+
+        final Material newMaterial = m;
+
+
 //        if(isUsingGeneratedMats()) {
 ////            if(originalMats.containsKey(geom)) {
 ////                return true;

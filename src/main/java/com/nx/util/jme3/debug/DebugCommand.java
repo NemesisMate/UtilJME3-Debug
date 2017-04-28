@@ -77,6 +77,7 @@ public class DebugCommand implements Command<ConsoleCommand> {
                     boolean wire = false;
                     boolean cullOff = false;
                     boolean normals = false;
+                    boolean meshInstances = false;
 
 
                     if(args.length > 1) {
@@ -100,12 +101,16 @@ public class DebugCommand implements Command<ConsoleCommand> {
                                 case "normals":
                                     normals = true;
                                     break;
+                                case "mi":
+                                case "meshInstances":
+                                    meshInstances = true;
+                                    break;
                             }
                         }
                     }
 
                     type = "mesh";
-                    result = debugMesh(colors, wire, normals, cullOff);
+                    result = debugMesh(colors, wire, normals, cullOff, meshInstances);
                     break;
                 case "s":
                 case "skeleton":
@@ -173,12 +178,12 @@ public class DebugCommand implements Command<ConsoleCommand> {
     }
 
 
-    private boolean debugMesh(boolean colors, boolean wire, boolean normals, boolean cullOff) {
+    private boolean debugMesh(boolean colors, boolean wire, boolean normals, boolean cullOff, boolean meshInstances) {
 //        checkDebugState();
         DebugMeshState debugs = app.getStateManager().getState(DebugMeshState.class);
 
         if(debugs == null) {
-            app.getStateManager().attach(new DebugMeshState(colors, wire, normals, cullOff));
+            app.getStateManager().attach(new DebugMeshState(colors, wire, normals, cullOff, meshInstances));
             return true;
         } else {
             app.getStateManager().detach(debugs);
