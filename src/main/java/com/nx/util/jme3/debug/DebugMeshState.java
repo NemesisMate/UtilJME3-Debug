@@ -7,10 +7,12 @@ import com.jme3.material.RenderState;
 import com.jme3.scene.*;
 import com.jme3.util.TangentBinormalGenerator;
 import com.nx.util.jme3.base.DebugUtil;
+import com.nx.util.jme3.base.SpatialUtil;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -28,6 +30,7 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 //    private boolean neverCull;
 
     private boolean meshInstances;
+    private boolean sharedMeshes;
 
 //    Node selected;
 //    AssetManager assetManager;
@@ -37,7 +40,32 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
     private Map<Geometry, Material> originalMats;
     private Map<Geometry, Material> clonedMats;
     private Map<Material, RenderState> originalRenderStates;
-    private Map<Mesh, Material> meshesInstances;
+
+    private Map<Integer, SharedMesh> meshesShared;
+//    private Map<Mesh, Material> meshesMaterials;
+    private class SharedMesh {
+        List<Mesh> meshes = new ArrayList<>(1);
+        List<Material> materials = new ArrayList<>(1);
+
+        public SharedMesh(Mesh mesh, Material material) {
+            add(mesh, material);
+        }
+
+        public void add(Mesh mesh, Material material) {
+            meshes.add(mesh);
+            materials.add(material);
+        }
+
+        public void remove(Mesh mesh) {
+            int index = meshes.indexOf(mesh);
+
+            if(index >= 0) {
+                meshes.remove(index);
+                materials.remove(index);
+            }
+        }
+    }
+
 
     public DebugMeshState(boolean colors, boolean wire, boolean normals, boolean faceCullOff) {
         this(colors, wire, normals, faceCullOff, false);
@@ -51,12 +79,12 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 //        }
     }
 
-    public DebugMeshState(boolean colors, boolean wire, boolean normals, boolean faceCullOff, boolean meshInstances) {
+    public DebugMeshState(boolean colors, boolean wire, boolean normals, boolean faceCullOff, boolean sharedMeshes) {
         this.colors = colors;
         this.wire = wire;
         this.normals = normals;
         this.faceCullOff = faceCullOff;
-        this.meshInstances = meshInstances;
+        this.sharedMeshes = sharedMeshes;
 //        this.neverCull = neverCull;
 
         // This mode DOESN'T respect the original shaders and thus, the vertex movement done by these.
@@ -74,8 +102,8 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
         originalMats = new HashMap<>();
         clonedMats = new HashMap<>();
 
-        if(meshInstances) {
-            meshesInstances = new IdentityHashMap<>();
+        if(sharedMeshes) {
+            meshesShared = new HashMap<>();
         }
     }
 
@@ -111,7 +139,7 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 
         originalMats = null;
         clonedMats = null;
-        meshesInstances = null;
+        meshesShared = null;
     }
 
     @Override
@@ -148,12 +176,16 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 
 
         Material m = null;
-        if(meshInstances) {
-            m = meshesInstances.get(geometry.getMesh());
+        if(sharedMeshes) {
+            m = getSharedMeshMaterial(geometry.getMesh()); //meshesInstances.get(SpatialUtil.meshBuffersHash(geometry.getMesh()));
         }
 
         if(m == null) {
             m = getDebugMaterial(geometry, colors, wire, normals, faceCullOff);
+
+            if(sharedMeshes) {
+                putSharedMeshMaterial(geometry.getMesh(), m);
+            }
         }
 
         final Material newMaterial = m;
@@ -240,6 +272,41 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
         return false;
     }
 
+    private Material getSharedMeshMaterial(Mesh mesh) {
+        SharedMesh sharedMesh = meshesShared.get(SpatialUtil.meshBuffersHash(mesh));
+
+        if(sharedMesh != null) {
+            int i = 0;
+            for (Mesh m : sharedMesh.meshes) {
+                if (SpatialUtil.meshShareBuffers(mesh, m)) {
+                    return sharedMesh.materials.get(i);
+                }
+            }
+
+            LoggerFactory.getLogger(this.getClass()).debug("OKOKOKOK: " + mesh);
+        }
+
+        return null;
+    }
+
+    private void putSharedMeshMaterial(Mesh mesh, Material material) {
+        int buffersHash = SpatialUtil.meshBuffersHash(mesh);
+
+        LoggerFactory.getLogger(this.getClass()).debug("NONONO: " + buffersHash);
+        SharedMesh sharedMesh = meshesShared.get(buffersHash);
+        if(sharedMesh == null) {
+            meshesShared.put(buffersHash, new SharedMesh(mesh, material));
+        } else {
+            for(Mesh m : sharedMesh.meshes) {
+                if(SpatialUtil.meshShareBuffers(mesh, m)) {
+                    return;
+                }
+            }
+
+            sharedMesh.add(mesh, material);
+        }
+    }
+
 
     private void checkTexCoord() {
         //TODO: use a colorgrid texture (1024x1024?) or just color each pixel with it texCoord value as color in the shader.
@@ -255,9 +322,7 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
             debugMaterial = DebugUtil.createNormalMaterial(geometry);
         }  else if(colors || !wire || originalMaterial == null) {
             debugMaterial = DebugUtil.createDebugMaterial(geometry, colors);
-            LoggerFactory.getLogger(DebugMeshState.class).debug("ALSKD");
         } else {
-            LoggerFactory.getLogger(DebugMeshState.class).debug("asdfasd33222222");
             debugMaterial = geometry.getMaterial().clone();
             wire = true;
         }
@@ -265,7 +330,6 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
         RenderState debugRenderState = debugMaterial.getAdditionalRenderState();
 
         if(wire) {
-            LoggerFactory.getLogger(DebugMeshState.class).debug("noup");
             debugRenderState.setWireframe(originalMaterial == null || !originalMaterial.getAdditionalRenderState().isWireframe());
         }
 
