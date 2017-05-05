@@ -19,6 +19,7 @@ import java.util.concurrent.Callable;
 /**
  * //TODO: Currently it can have strange effects in the scene if their geometries materials (or the materials renderstates) are changed externally once the debug is active.
  * //TODO: Solution to this: create a dupped scene and attach it to the debugNode (and set the cullhint for the uppernodes to always)
+ * //TODO: Add instancing support
  * Created by NemesisMate on 1/12/16.
  */
 public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
