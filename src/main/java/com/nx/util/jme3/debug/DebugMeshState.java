@@ -4,22 +4,23 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.scene.*;
+import com.jme3.scene.instancing.InstancedNode;
 import com.jme3.util.TangentBinormalGenerator;
 import com.nx.util.jme3.base.DebugUtil;
 import com.nx.util.jme3.base.SpatialUtil;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
 /**
  * //TODO: Currently it can have strange effects in the scene if their geometries materials (or the materials renderstates) are changed externally once the debug is active.
  * //TODO: Solution to this: create a dupped scene and attach it to the debugNode (and set the cullhint for the uppernodes to always)
- * //TODO: Add instancing support
+ * //TODO: Fix a bug with instanced not going back to it original material
  * Created by NemesisMate on 1/12/16.
  */
 public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
@@ -30,7 +31,7 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
     private boolean normals;
 //    private boolean neverCull;
 
-    private boolean meshInstances;
+    private boolean groupedGeometries;
     private boolean sharedMeshes;
 
 //    Node selected;
@@ -42,34 +43,41 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
     private Map<Geometry, Material> clonedMats;
     private Map<Material, RenderState> originalRenderStates;
 
-    private Map<Integer, SharedMesh> meshesShared;
-//    private Map<Mesh, Material> meshesMaterials;
-    private class SharedMesh {
-        List<Mesh> meshes = new ArrayList<>(1);
-        List<Material> materials = new ArrayList<>(1);
+//    private Map<Integer, SharedMesh> meshesShared;
+////    private Map<Mesh, Material> meshesMaterials;
+//    private class SharedMesh {
+//        List<Mesh> meshes = new ArrayList<>(1);
+//        List<Material> materials = new ArrayList<>(1);
+//
+//        public SharedMesh(Mesh mesh, Material material) {
+//            add(mesh, material);
+//        }
+//
+//        public void add(Mesh mesh, Material material) {
+//            meshes.add(mesh);
+//            materials.add(material);
+//        }
+//
+//        public void remove(Mesh mesh) {
+//            int index = meshes.indexOf(mesh);
+//
+//            if(index >= 0) {
+//                meshes.remove(index);
+//                materials.remove(index);
+//            }
+//        }
+//    }
 
-        public SharedMesh(Mesh mesh, Material material) {
-            add(mesh, material);
-        }
 
-        public void add(Mesh mesh, Material material) {
-            meshes.add(mesh);
-            materials.add(material);
-        }
 
-        public void remove(Mesh mesh) {
-            int index = meshes.indexOf(mesh);
 
-            if(index >= 0) {
-                meshes.remove(index);
-                materials.remove(index);
-            }
-        }
-    }
+
+    private Map<Mesh, Material> meshesShared;
+    private Map<Spatial, Material> groupedMaterials;
 
 
     public DebugMeshState(boolean colors, boolean wire, boolean normals, boolean faceCullOff) {
-        this(colors, wire, normals, faceCullOff, false);
+        this(colors, wire, normals, faceCullOff, false, false);
 //        this.neverCull = neverCull;
 
         // This mode DOESN'T respect the original shaders and thus, the vertex movement done by these.
@@ -80,14 +88,14 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 //        }
     }
 
-    public DebugMeshState(boolean colors, boolean wire, boolean normals, boolean faceCullOff, boolean sharedMeshes) {
+    public DebugMeshState(boolean colors, boolean wire, boolean normals, boolean faceCullOff, boolean sharedMeshes, boolean groupedGeometries) {
         this.colors = colors;
         this.wire = wire;
         this.normals = normals;
         this.faceCullOff = faceCullOff;
         this.sharedMeshes = sharedMeshes;
+        this.groupedGeometries = groupedGeometries;
 //        this.neverCull = neverCull;
-
         // This mode DOESN'T respect the original shaders and thus, the vertex movement done by these.
 //        if(isUsingGeneratedMats()) {
 
@@ -105,6 +113,10 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 
         if(sharedMeshes) {
             meshesShared = new HashMap<>();
+        }
+
+        if(groupedGeometries) {
+            groupedMaterials = new HashMap<>();
         }
     }
 
@@ -170,23 +182,64 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
             return true;
         }
 
-
-        originalMats.put(geometry, material);
-
-
-
-
         Material m = null;
-        if(sharedMeshes) {
+        if(groupedGeometries) {
+            m = groupedMaterials.get(geometry);
+        }
+
+        if(m == null && sharedMeshes) {
             m = getSharedMeshMaterial(geometry.getMesh()); //meshesInstances.get(SpatialUtil.meshBuffersHash(geometry.getMesh()));
         }
 
         if(m == null) {
+
+            GeometryGroupNode groupNode = null;
+            gr:
+            if(groupedGeometries) {
+                Node parent = geometry.getParent();
+                while(parent != null) {
+                    if(parent instanceof GeometryGroupNode) {
+//                        debugedSpatial = parent;
+                        groupNode = (GeometryGroupNode) parent;
+                        break gr;
+                    }
+                    parent = parent.getParent();
+                }
+
+                return true;
+            }
+
             m = getDebugMaterial(geometry, colors, wire, normals, faceCullOff);
 
             if(sharedMeshes) {
                 putSharedMeshMaterial(geometry.getMesh(), m);
             }
+
+            if(groupedGeometries) {
+
+                String paramName = "Color";
+                ColorRGBA color;
+                if(m.getMaterialDef().getMaterialParam("Diffuse") != null) {
+                    paramName = "Diffuse";
+                }
+
+                if(groupNode instanceof InstancedNode) {
+                    SpatialUtil.enableMaterialInstancing(m);
+                    color = ColorRGBA.Blue;
+                } else {
+                    color = ColorRGBA.Green;
+                }
+
+                m.setColor(paramName, color.mult(FastMath.nextRandomFloat()));
+
+
+
+
+                groupedMaterials.put(geometry, m);
+            }
+
+
+
         }
 
         final Material newMaterial = m;
@@ -254,6 +307,8 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 //        }
 
 
+
+        originalMats.put(geometry, material);
         clonedMats.put(geometry, newMaterial.clone());
 
         app.enqueue(new Callable<Void>() {
@@ -262,6 +317,7 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
                 if(geometry.getMesh().getBuffer(VertexBuffer.Type.Normal) != null && geometry.getMesh().getBuffer(VertexBuffer.Type.Tangent) == null) {
                     TangentBinormalGenerator.generate(geometry);
                 }
+
 
                 geometry.setMaterial(newMaterial);
 
@@ -274,38 +330,40 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
     }
 
     private Material getSharedMeshMaterial(Mesh mesh) {
-        SharedMesh sharedMesh = meshesShared.get(SpatialUtil.meshBuffersHash(mesh));
-
-        if(sharedMesh != null) {
-            int i = 0;
-            for (Mesh m : sharedMesh.meshes) {
-                if (SpatialUtil.meshShareBuffers(mesh, m)) {
-                    return sharedMesh.materials.get(i);
-                }
-            }
-
-            LoggerFactory.getLogger(this.getClass()).debug("OKOKOKOK: " + mesh);
-        }
-
-        return null;
+        return meshesShared.get(mesh);
+//        SharedMesh sharedMesh = meshesShared.get(SpatialUtil.meshBuffersHash(mesh));
+//
+//        if(sharedMesh != null) {
+//            int i = 0;
+//            for (Mesh m : sharedMesh.meshes) {
+//                if (SpatialUtil.meshShareBuffers(mesh, m)) {
+//                    return sharedMesh.materials.get(i);
+//                }
+//            }
+//
+//            LoggerFactory.getLogger(this.getClass()).debug("OKOKOKOK: " + mesh);
+//        }
+//
+//        return null;
     }
 
     private void putSharedMeshMaterial(Mesh mesh, Material material) {
-        int buffersHash = SpatialUtil.meshBuffersHash(mesh);
-
-        LoggerFactory.getLogger(this.getClass()).debug("NONONO: " + buffersHash);
-        SharedMesh sharedMesh = meshesShared.get(buffersHash);
-        if(sharedMesh == null) {
-            meshesShared.put(buffersHash, new SharedMesh(mesh, material));
-        } else {
-            for(Mesh m : sharedMesh.meshes) {
-                if(SpatialUtil.meshShareBuffers(mesh, m)) {
-                    return;
-                }
-            }
-
-            sharedMesh.add(mesh, material);
-        }
+        meshesShared.put(mesh, material);
+//        int buffersHash = SpatialUtil.meshBuffersHash(mesh);
+//
+//        LoggerFactory.getLogger(this.getClass()).debug("NONONO: " + buffersHash);
+//        SharedMesh sharedMesh = meshesShared.get(buffersHash);
+//        if(sharedMesh == null) {
+//            meshesShared.put(buffersHash, new SharedMesh(mesh, material));
+//        } else {
+//            for(Mesh m : sharedMesh.meshes) {
+//                if(SpatialUtil.meshShareBuffers(mesh, m)) {
+//                    return;
+//                }
+//            }
+//
+//            sharedMesh.add(mesh, material);
+//        }
     }
 
 

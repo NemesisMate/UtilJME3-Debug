@@ -77,8 +77,9 @@ public class DebugCommand implements Command<ConsoleCommand> {
                     boolean wire = false;
                     boolean cullOff = false;
                     boolean normals = false;
-                    boolean meshInstances = false;
+//                    boolean meshInstances = false;
                     boolean sharedMeshes = false;
+                    boolean grouped = false;
 
 
                     if(args.length > 1) {
@@ -102,20 +103,22 @@ public class DebugCommand implements Command<ConsoleCommand> {
                                 case "normals":
                                     normals = true;
                                     break;
-                                case "mi":
-                                case "meshInstances":
-                                    meshInstances = true;
-                                    break;
                                 case "sm":
                                 case "sharedMeshes":
                                     sharedMeshes = true;
+                                    break;
+                                case "gr":
+                                case "grouped":
+                                case "instanced":
+                                case "batched":
+                                    grouped = true;
                                     break;
                             }
                         }
                     }
 
                     type = "mesh";
-                    result = debugMesh(colors, wire, normals, cullOff, sharedMeshes);
+                    result = debugMesh(colors, wire, normals, cullOff, sharedMeshes, grouped);
                     break;
                 case "s":
                 case "skeleton":
@@ -183,12 +186,12 @@ public class DebugCommand implements Command<ConsoleCommand> {
     }
 
 
-    private boolean debugMesh(boolean colors, boolean wire, boolean normals, boolean cullOff, boolean sharedMeshes) {
+    private boolean debugMesh(boolean colors, boolean wire, boolean normals, boolean cullOff, boolean sharedMeshes, boolean grouped) {
 //        checkDebugState();
         DebugMeshState debugs = app.getStateManager().getState(DebugMeshState.class);
 
         if(debugs == null) {
-            app.getStateManager().attach(new DebugMeshState(colors, wire, normals, cullOff, sharedMeshes));
+            app.getStateManager().attach(new DebugMeshState(colors, wire, normals, cullOff, sharedMeshes, grouped));
             return true;
         } else {
             app.getStateManager().detach(debugs);
