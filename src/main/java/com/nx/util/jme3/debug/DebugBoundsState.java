@@ -5,6 +5,7 @@ import com.jme3.app.state.AppStateManager;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
+import com.jme3.effect.ParticleEmitter;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
@@ -20,6 +21,27 @@ import com.nx.util.jme3.base.SceneVars;
 import com.nx.util.jme3.base.SpatialUtil;
 
 /**
+ * Somehow, this throws an exception with big scenes because of multithread but, ONLY THE MAIN THREAD IS BEING USED!!!!
+ *
+ * java.lang.UnsupportedOperationException: Compare function result changed! Make sure you do not modify the scene from another thread!
+ * at com.jme3.util.ListSort.mergeLow(ListSort.java:702)
+ * at com.jme3.util.ListSort.mergeRuns(ListSort.java:474)
+ * at com.jme3.util.ListSort.mergeForceCollapse(ListSort.java:423)
+ * at com.jme3.util.ListSort.sort(ListSort.java:241)
+ * at com.jme3.renderer.queue.GeometryList.sort(GeometryList.java:158)
+ * at com.jme3.renderer.queue.RenderQueue.renderGeometryList(RenderQueue.java:262)
+ * at com.jme3.renderer.queue.RenderQueue.renderQueue(RenderQueue.java:305)
+ * at com.jme3.renderer.RenderManager.renderViewPortQueues(RenderManager.java:870)
+ * at com.jme3.renderer.RenderManager.flushQueue(RenderManager.java:781)
+ * at com.jme3.renderer.RenderManager.renderViewPort(RenderManager.java:1097)
+ * at com.jme3.renderer.RenderManager.render(RenderManager.java:1145)
+ * at com.jme3.app.SimpleApplication.update(SimpleApplication.java:253)
+ * at com.jme3.system.lwjgl.LwjglAbstractDisplay.runLoop(LwjglAbstractDisplay.java:151)
+ * at com.jme3.system.lwjgl.LwjglDisplay.runLoop(LwjglDisplay.java:193)
+ * at com.jme3.system.lwjgl.LwjglAbstractDisplay.run(LwjglAbstractDisplay.java:232)
+ * at java.lang.Thread.run(Thread.java:748)
+ *
+ *
  * Created by NemesisMate on 1/12/16.
  */
 public class DebugBoundsState extends AbstractDebugGraphStateModule {
@@ -45,6 +67,8 @@ public class DebugBoundsState extends AbstractDebugGraphStateModule {
 
     private Material flatVolumeGeomMaterial;
     private Material flatVolumeNodeMaterial;
+
+    private Material particlesMaterial;
 
     private Material geomCenterMaterial;
 
@@ -81,6 +105,10 @@ public class DebugBoundsState extends AbstractDebugGraphStateModule {
         this.geomCenterMaterial = SpatialUtil.createMaterial(getAssetManager(), ColorRGBA.White);
 
 
+        this.particlesMaterial = SpatialUtil.createMaterial(getAssetManager(), ColorRGBA.Brown);
+
+        // TODO: It changes so fast that with wireframe we can't see anything. Change this so an average bound is shown each frame.
+        this.particlesMaterial.getAdditionalRenderState().setWireframe(true);
         this.geometriesMaterial.getAdditionalRenderState().setWireframe(true);
         this.noVolumeGeomMaterial.getAdditionalRenderState().setWireframe(true);
         this.flatVolumeGeomMaterial.getAdditionalRenderState().setWireframe(true);
@@ -215,7 +243,7 @@ public class DebugBoundsState extends AbstractDebugGraphStateModule {
                 }
             });
         } else {
-            debugGeometry.setMaterial(originalSpatial instanceof Node ? nodesMaterial : geometriesMaterial);
+            debugGeometry.setMaterial(originalSpatial instanceof Node ? nodesMaterial : (originalSpatial instanceof ParticleEmitter ? particlesMaterial : geometriesMaterial));
             debugGeometry.addControl(new AbstractControl() {
                 @Override
                 protected void controlUpdate(float tpf) {
@@ -259,7 +287,7 @@ public class DebugBoundsState extends AbstractDebugGraphStateModule {
                                 if(bv.getVolume() == 0) {
                                     changeDebugMaterial(debugGeometry, flatVolumeGeomMaterial);
                                 } else {
-                                    changeDebugMaterial(debugGeometry, geometriesMaterial);
+                                    changeDebugMaterial(debugGeometry, originalSpatial instanceof ParticleEmitter ? particlesMaterial : geometriesMaterial);
                                 }
                             }
 
