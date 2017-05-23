@@ -75,6 +75,8 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
     private Map<Mesh, Material> meshesShared;
     private Map<Spatial, Material> groupedMaterials;
 
+    private Map<GeometryGroupNode, ColorRGBA> groupColors;
+
 
     public DebugMeshState(boolean colors, boolean wire, boolean normals, boolean faceCullOff) {
         this(colors, wire, normals, faceCullOff, false, false);
@@ -117,6 +119,8 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
 
         if(groupedGeometries) {
             groupedMaterials = new HashMap<>();
+
+            groupColors = new HashMap<>();
         }
     }
 
@@ -153,6 +157,7 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
         originalMats = null;
         clonedMats = null;
         meshesShared = null;
+        groupColors = null;
     }
 
     @Override
@@ -200,6 +205,7 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
                 while(parent != null) {
                     if(parent instanceof GeometryGroupNode) {
 //                        debugedSpatial = parent;
+
                         groupNode = (GeometryGroupNode) parent;
                         break gr;
                     }
@@ -230,9 +236,12 @@ public class DebugMeshState extends AbstractThreadedDebugGraphStateModule {
                     color = ColorRGBA.Green;
                 }
 
-                m.setColor(paramName, color.mult(FastMath.nextRandomFloat()));
+                ColorRGBA c = groupColors.get(groupNode);
+                if(c == null) {
+                    c = color.mult(FastMath.nextRandomFloat());
+                }
 
-
+                m.setColor(paramName, c);
 
 
                 groupedMaterials.put(geometry, m);
