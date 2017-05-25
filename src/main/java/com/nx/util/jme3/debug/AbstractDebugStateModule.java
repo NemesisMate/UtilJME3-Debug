@@ -18,7 +18,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public abstract class AbstractDebugStateModule<T> extends AbstractAppState {
 
-    private final String DEBUG_NODES_NAME = "-_\\Debug||Node/_-";
+    public static final String DEBUG_NODES_NAME = "-_\\Debug||Node/_-";
     private int BATCH_INTERVAL = 1;
 
     protected Application app;
