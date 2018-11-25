@@ -125,6 +125,7 @@ public class DebugSkeletonState extends AbstractThreadedDebugGraphStateModule {
                     public void visit(Spatial spatial) {
                         if (spatial instanceof Geometry) {
                             Material mat = new Material(getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+                            mat.setName("Skeleton-Debug_material");
                             mat.setColor("Color", ColorRGBA.randomColor());
                             mat.getAdditionalRenderState().setDepthTest(false);
                             mat.getAdditionalRenderState().setDepthWrite(false);
